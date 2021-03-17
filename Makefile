@@ -1,17 +1,20 @@
-APPNAME?=systemd-mac-address-monitor-dbus
+export APPNAME?=systemd-mac-address-monitor-dbus
 
-# version from last tag
-VERSION := $(shell git describe --abbrev=0 --always --tags)
+# Version from last tag
+export VERSION := $(shell git describe --abbrev=0 --always --tags)
 BUILD := $(shell git rev-parse $(VERSION))
 BUILDDATE := $(shell git log -1 --format=%aI $(VERSION))
 BUILDFILES?=$$(find . -mindepth 1 -maxdepth 1 -type f \( -iname "*${APPNAME}-v*" -a ! -iname "*.shasums" \))
-RELEASETMPDIR := $(shell mktemp -d -t ${APPNAME}-rel-XXXXXX)
-APPANDVER := ${APPNAME}-$(VERSION)
+RELEASETMPDIR := $(shell mktemp -d -t ${APPNAME}-rel-${VERSION}-XXXXXX)
+export APPANDVER := ${APPNAME}-$(VERSION)
 RELEASETMPAPPDIR := $(RELEASETMPDIR)/$(APPANDVER)
 
 default: build
 
-release: compress-everything shasums release-ldistros
+build:
+	@echo "nothing to build. Try release target?"
+
+release: compress-everything release-ldistros shasums
 	@echo "release done..."
 
 # Linux distributions
@@ -23,7 +26,7 @@ shasums:
 	@pushd "release/${VERSION}" && shasum -a 256 $(BUILDFILES) > $(APPANDVER).shasums
 
 # Copy common files to release directory
-# Creates $(APPNAME)-$(VERSION) directory prefix where everything will be copied by compress-$OS targets
+# Creates $(APPNAME)-$(VERSION) directory prefix where everything will be copied to compression targets
 copycommon:
 	@echo "Copying common files to temporary release directory '$(RELEASETMPAPPDIR)'.."
 	@mkdir -p "$(RELEASETMPAPPDIR)/bin"
@@ -34,7 +37,8 @@ copycommon:
 # Compress files: GNU/Linux
 compress-linux:
 	echo "GNU/Linux tar..."; \
-	cp -v "$(PWD)/mac-address-monitor-dbus" "$(RELEASETMPAPPDIR)/bin"; \
+	cp -v "$(PWD)/${APPNAME}" "$(RELEASETMPAPPDIR)/bin"; \
+	cp -v "$(PWD)/${APPNAME}@.service" "$(RELEASETMPAPPDIR)"; \
 	cd "$(RELEASETMPDIR)"; \
 	tar --numeric-owner --owner=0 --group=0 -zcvf "$(PWD)/release/${VERSION}/$(APPANDVER).tar.gz" . ; \
 	rm "$(RELEASETMPAPPDIR)/bin/${APPNAME}"; 
@@ -47,6 +51,7 @@ compress-everything: copycommon compress-linux
 # Distro: Arch linux - https://www.archlinux.org/
 # Generates multi-arch PKGBUILD
 ldistro-arch:
-	pushd release/linux/arch && make build
+	$(MAKE) -C "$(PWD)/release/linux/arch/" release && \
+	mv "$(PWD)/release/linux/arch/PKGBUILD" "$(PWD)/release/$(VERSION)/$(APPANDVER).PKGBUILD"
 
 .PHONY: all clean test default

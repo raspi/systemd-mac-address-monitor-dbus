@@ -1,0 +1,18 @@
+# Maintainer: %MAINTAINER%
+pkgname=mac-address-monitor-dbus
+pkgver=%VERSION%
+pkgrel=1
+pkgdesc="Send 'ip monitor neigh dev <NIC>' MAC address status changes to systemd D-Bus"
+url="https://github.com/raspi/systemd-mac-address-monitor-dbus"
+license=('Apache 2.0')
+arch=('any')
+sha256sums=%SHA256SUM%
+source=("$url/releases/download/$pkgver/$pkgname-$pkgver.tar.gz")
+
+package() {
+  cd "$srcdir/$pkgname-$pkgver"
+  install -Dm644 "LICENSE" -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -Dm644 "README.md" -t "$pkgdir/usr/share/doc/$pkgname"
+  install -Dm644 "%APPNAME%@.service" -t "$pkgdir/usr/lib/systemd/system/"
+  install -Dm755 "bin/%APPNAME%" -t "$pkgdir/usr/bin"
+}

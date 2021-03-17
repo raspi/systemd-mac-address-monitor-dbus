@@ -1,15 +1,21 @@
 #!/bin/bash
-# Send discovered MAC addresses to DBUS on given interface ($1 = NIC)
+# Send discovered MAC addresses to DBUS on given interface ($1 = NIC (example: eth0))
 
 set -eu
 set +m
 set -o pipefail
 shopt -s lastpipe
 
-stdbuf -oL ip monitor neigh dev $1 | while read -r ipaddr _ iface _ mac status
+IFACE=$1
+
+if [[ ! -d "/sys/class/net/$IFACE" ]]; then
+  >&2 echo "Invalid interface: $IFACE"
+  exit 1
+fi
+
+stdbuf -oL ip monitor neigh dev $IFACE | while read -r ipaddr _ iface _ mac status
 do
-  mac=${mac//:}
-  #echo -e "$iface\t$mac\t$ipaddr\t$status"
+  # Send to D-Bus
   dbus-send --system --dest=org.freedesktop.ExampleName      \
             /org/freedesktop/sample/object/name              \
             org.freedesktop.ExampleInterface.ExampleMethod   \
