@@ -15,3 +15,11 @@ For example:
 * Send alert(s) when MAC address X is not seen for a while
 * etc...
  
+# Usage
+
+Enable monitoring on listed network interfaces:
+
+    % sudo systemctl {enable,start} eth0@systemd-mac-address-monitor-dbus
+    % sudo systemctl {enable,start} eth1@systemd-mac-address-monitor-dbus
+    ...
+    % sudo systemctl {enable,start} your-custom-collector
