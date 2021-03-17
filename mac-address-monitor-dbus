@@ -1,0 +1,17 @@
+#!/bin/bash
+# Send discovered MAC addresses to DBUS on given interface ($1 = NIC)
+
+set -eu
+set +m
+set -o pipefail
+shopt -s lastpipe
+
+stdbuf -oL ip monitor neigh dev $1 | while read -r ipaddr _ iface _ mac status
+do
+  mac=${mac//:}
+  #echo -e "$iface\t$mac\t$ipaddr\t$status"
+  dbus-send --system --dest=org.freedesktop.ExampleName      \
+            /org/freedesktop/sample/object/name              \
+            org.freedesktop.ExampleInterface.ExampleMethod   \
+            string:"$iface" string:"$mac" string:"$ipaddr" string:"$status"
+done

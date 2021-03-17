@@ -1,0 +1,10 @@
+[Unit]
+Description=MAC address monitor for NIC %i to DBUS
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/mac-address-monitor-dbus %i
+After=network.target
+
+[Install]
+WantedBy=multi-user.target
